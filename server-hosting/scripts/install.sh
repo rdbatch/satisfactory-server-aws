@@ -111,7 +111,7 @@ swapon -a /swap
 mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
 if [ "$(ls -A /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server)" ]
 then
-    aws s3 cp s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
+    aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
 fi
 
 # automated backups to s3 every 5 minutes
