@@ -7,6 +7,7 @@ import * as s3_assets from 'aws-cdk-lib/aws-s3-assets';
 import * as lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
+import { CfnEIP } from 'aws-cdk-lib/aws-ec2';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -67,7 +68,7 @@ export class ServerHostingStack extends Stack {
 
     const server = new ec2.Instance(this, `${prefix}Server`, {
       // 2 vCPU, 8 GB RAM should be enough for most factories
-      instanceType: new ec2.InstanceType("m5a.large"),
+      instanceType: new ec2.InstanceType("r5a.large"),
       // get exact ami from parameter exported by canonical
       // https://discourse.ubuntu.com/t/finding-ubuntu-images-with-the-aws-ssm-parameter-store/15507
       machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id"),
@@ -133,6 +134,11 @@ export class ServerHostingStack extends Stack {
       filePath: localPath,
       arguments: `${savesBucket.bucketName} ${Config.useExperimentalBuild}`
     });
+
+    new CfnEIP(this, 'EIP', {
+      domain: 'vpc',
+      instanceId: server.instanceId
+    })
 
     //////////////////////////////
     // Add api to start server

@@ -103,5 +103,11 @@ EOF
 systemctl enable auto-shutdown
 systemctl start auto-shutdown
 
+dd if=/dev/zero of=/swap bs=1M count=1024
+chmod 0600 /swap
+mkswap /swap
+swapon -a /swap
+
 # automated backups to s3 every 5 minutes
-su - ubuntu -c "crontab -l -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
+su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
+
