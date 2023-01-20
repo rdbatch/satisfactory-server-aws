@@ -5,6 +5,9 @@
 #  2: true|false - whether to use Satisfactory Experimental build (optional, default false)
 S3_SAVE_BUCKET=$1
 USE_EXPERIMENTAL_BUILD=${2-false}
+TIMEZONE=America/New_York
+
+timedatectl set-timezone $TIMEZONE
 
 
 # install steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD?__cf_chl_jschl_tk__=pmd_WNQPOiK18.h0rf16RCYrARI2s8_84hUMwT.7N1xHYcs-1635248050-0-gqNtZGzNAiWjcnBszQiR#Linux.2FmacOS)
@@ -109,10 +112,12 @@ mkswap /swap
 swapon -a /swap
 
 mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-if [ "$(ls -A /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server)" ]
-then
-    aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-fi
+aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
+chown -R ubuntu:ubuntu /home/ubuntu/.config/
+# if [ "$(ls -A /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server)" ]
+# then
+#     aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
+# fi
 
 # automated backups to s3 every 5 minutes
 su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
