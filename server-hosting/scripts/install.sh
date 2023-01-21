@@ -111,14 +111,14 @@ chmod 0600 /swap
 mkswap /swap
 swapon -a /swap
 
+mkdir -p /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer
+aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer
+chown -R ubuntu:ubuntu /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved
+
 mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
+aws s3 sync s3://$S3_SAVE_BUCKET/saves /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
 chown -R ubuntu:ubuntu /home/ubuntu/.config/
-# if [ "$(ls -A /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server)" ]
-# then
-#     aws s3 sync s3://$S3_SAVE_BUCKET /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-# fi
 
 # automated backups to s3 every 5 minutes
-su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET\"; } | crontab -"
+su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\"; } | crontab -"
 
