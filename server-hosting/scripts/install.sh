@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Note: Arguments to this script 
 #  1: string - S3 bucket for your backup save files (required)
@@ -9,6 +9,7 @@ TIMEZONE=America/New_York
 
 timedatectl set-timezone $TIMEZONE
 
+sleep 5
 
 # install steamcmd: https://developer.valvesoftware.com/wiki/SteamCMD?__cf_chl_jschl_tk__=pmd_WNQPOiK18.h0rf16RCYrARI2s8_84hUMwT.7N1xHYcs-1635248050-0-gqNtZGzNAiWjcnBszQiR#Linux.2FmacOS)
 add-apt-repository multiverse
@@ -40,13 +41,13 @@ After=syslog.target network.target nss-lookup.target network-online.target
 [Service]
 Environment="LD_LIBRARY_PATH=./linux64"
 ExecStartPre=$STEAM_INSTALL_SCRIPT
-ExecStart=/home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryServer.sh
+ExecStart=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryServer.sh
 User=ubuntu
 Group=ubuntu
 StandardOutput=journal
 Restart=on-failure
 KillSignal=SIGINT
-WorkingDirectory=/home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer
+WorkingDirectory=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer
 
 [Install]
 WantedBy=multi-user.target
@@ -111,14 +112,22 @@ chmod 0600 /swap
 mkswap /swap
 swapon -a /swap
 
-mkdir -p /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer
-aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer
-chown -R ubuntu:ubuntu /home/ubuntu/.steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved
+su - ubuntu -c "mkdir -p /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
+su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
+# chown -R ubuntu:ubuntu /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved
 
-mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-aws s3 sync s3://$S3_SAVE_BUCKET/saves /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server
-chown -R ubuntu:ubuntu /home/ubuntu/.config/
+su - ubuntu -c "mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
+su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/saves /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
+# chown -R ubuntu:ubuntu /home/ubuntu/.config/
+
+su - ubuntu -c "mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
+su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/blueprints /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
 
 # automated backups to s3 every 5 minutes
-su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\"; } | crontab -"
+# su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\"; } | crontab -"
+# su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints s3://$S3_SAVE_BUCKET/blueprints\"; } | crontab -"
 
+su - ubuntu -c "crontab -l 2>/dev/null || echo "
+su - ubuntu -c "echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\" >> /tmp/crontab.txt"
+su - ubuntu -c "echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints s3://$S3_SAVE_BUCKET/blueprints\" >> /tmp/crontab.txt"
+su - ubuntu -c "crontab /tmp/crontab.txt"
