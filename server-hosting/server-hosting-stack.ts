@@ -63,9 +63,8 @@ export class ServerHostingStack extends Stack {
       description: "Allow Satisfactory client to connect to server",
     })
 
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(7777), "Game port")
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(15000), "Beacon port")
-    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(15777), "Query port")
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(7777), "Game port udp")
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(7777), "Game port tcp")
 
     const server = new ec2.Instance(this, `${prefix}Server`, {
       // 4 vCPU, 16 GB RAM since we're supporting late stage gameplay
@@ -162,7 +161,7 @@ export class ServerHostingStack extends Stack {
           'ec2:StartInstances',
         ],
         resources: [
-          `arn:aws:ec2:*:${Config.account}:instance/${server.instanceId}`,
+          `arn:aws:ec2:*:${this.account}:instance/${server.instanceId}`,
         ]
       }))
       startServerLambda.addToRolePolicy(new iam.PolicyStatement({
