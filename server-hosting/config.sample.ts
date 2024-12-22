@@ -1,9 +1,9 @@
 export const Config = {
      // compulsory parameters
 
-     // server hosting region
+     // server hosting region, leave blank to use CDK_DEFAULT_REGION
      region: '',
-     // server hosting account
+     // server hosting account, leave blank to use CDK_DEFAULT_ACCOUNT
      account: '',
      // prefix for all resources in this app
      prefix: 'SatisfactoryHosting',
