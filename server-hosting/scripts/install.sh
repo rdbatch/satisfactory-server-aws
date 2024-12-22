@@ -2,9 +2,7 @@
 
 # Note: Arguments to this script 
 #  1: string - S3 bucket for your backup save files (required)
-#  2: true|false - whether to use Satisfactory Experimental build (optional, default false)
 S3_SAVE_BUCKET=$1
-USE_EXPERIMENTAL_BUILD=${2-false}
 TIMEZONE=America/New_York
 
 timedatectl set-timezone $TIMEZONE
@@ -16,6 +14,9 @@ add-apt-repository multiverse
 dpkg --add-architecture i386
 apt update
 
+apt upgrade -y
+snap install bpytop
+
 # Needed to accept steam license without hangup
 echo steam steam/question 'select' "I AGREE" | sudo debconf-set-selections
 echo steam steam/license note '' | sudo debconf-set-selections
@@ -23,11 +24,7 @@ echo steam steam/license note '' | sudo debconf-set-selections
 apt install -y unzip lib32gcc1 steamcmd
 
 # install satisfactory: https://satisfactory.fandom.com/wiki/Dedicated_servers
-if [ $USE_EXPERIMENTAL_BUILD = "true" ]; then
-    STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 -beta experimental validate +quit"
-else
-    STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 validate +quit"
-fi
+STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 validate +quit"
 # note, we are switching users because steam doesn't recommend running steamcmd as root
 su - ubuntu -c "$STEAM_INSTALL_SCRIPT"
 
@@ -114,18 +111,12 @@ swapon -a /swap
 
 su - ubuntu -c "mkdir -p /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
 su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
-# chown -R ubuntu:ubuntu /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved
 
 su - ubuntu -c "mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
 su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/saves /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
-# chown -R ubuntu:ubuntu /home/ubuntu/.config/
 
 su - ubuntu -c "mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
 su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/blueprints /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints"
-
-# automated backups to s3 every 5 minutes
-# su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\"; } | crontab -"
-# su - ubuntu -c "crontab -e ubuntu | { cat; echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/blueprints s3://$S3_SAVE_BUCKET/blueprints\"; } | crontab -"
 
 su - ubuntu -c "crontab -l 2>/dev/null || echo "
 su - ubuntu -c "echo \"*/5 * * * * /usr/local/bin/aws s3 sync /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server s3://$S3_SAVE_BUCKET/saves\" >> /tmp/crontab.txt"

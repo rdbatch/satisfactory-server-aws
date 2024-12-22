@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { Config } from './config';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
@@ -132,12 +132,16 @@ export class ServerHostingStack extends Stack {
     });
     server.userData.addExecuteFileCommand({
       filePath: localPath,
-      arguments: `${savesBucket.bucketName} ${Config.useExperimentalBuild}`
+      arguments: `${savesBucket.bucketName}`
     });
 
-    new CfnEIP(this, 'EIP', {
+    const eip = new CfnEIP(this, 'EIP', {
       domain: 'vpc',
       instanceId: server.instanceId
+    })
+
+    new CfnOutput(this, 'ServerIp', {
+      value: eip.ref
     })
 
     //////////////////////////////
@@ -180,32 +184,5 @@ export class ServerHostingStack extends Stack {
         description: "Trigger lambda function to start server",
       })
     }
-    
-    // if (Config.saveEndpoint && Config.saveEndpoint === true) {
-    //   const downloadLatestSaveLambda = new lambda_nodejs.NodejsFunction(this, `${Config.prefix}SaveDownloadLambda`, {
-    //     architecture: Architecture.ARM_64,
-    //     entry: './server-hosting/lambda/save-download.ts',
-    //     description: "Download latest save",
-    //     timeout: Duration.seconds(10),
-    //     environment: {
-    //       BUCKET_NAME: savesBucket.bucketName
-    //     }
-    //   })
-
-    //   downloadLatestSaveLambda.addToRolePolicy(new iam.PolicyStatement({
-    //     actions: [
-    //       's3:ListObjects',
-    //       's3:GetObject'
-    //     ],
-    //     resources: [
-    //       savesBucket.bucketArn + "/*"
-    //     ]
-    //   }))
-
-    //   new apigw.LambdaRestApi(this, `${Config.prefix}DownloadLatestSaveApi`, {
-    //     handler: downloadLatestSaveLambda,
-    //     description: "Download the latest save file",
-    //   })
-    // }
   }
 }
