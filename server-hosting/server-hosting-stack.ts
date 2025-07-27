@@ -65,6 +65,7 @@ export class ServerHostingStack extends Stack {
 
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.udp(7777), "Game port udp")
     securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(7777), "Game port tcp")
+    securityGroup.addIngressRule(ec2.Peer.anyIpv4(), ec2.Port.tcp(8888), "Game port tcp")
 
     const server = new ec2.Instance(this, `${prefix}Server`, {
       // 4 vCPU, 16 GB RAM since we're supporting late stage gameplay
