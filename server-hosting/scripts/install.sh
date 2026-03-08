@@ -21,7 +21,7 @@ snap install bpytop
 echo steam steam/question 'select' "I AGREE" | sudo debconf-set-selections
 echo steam steam/license note '' | sudo debconf-set-selections
 
-apt install -y unzip lib32gcc1 steamcmd
+apt install -y unzip lib32gcc-s1 steamcmd
 
 # install satisfactory: https://satisfactory.fandom.com/wiki/Dedicated_servers
 STEAM_INSTALL_SCRIPT="/usr/games/steamcmd +login anonymous +app_update 1690800 validate +quit"
@@ -38,13 +38,13 @@ After=syslog.target network.target nss-lookup.target network-online.target
 [Service]
 Environment="LD_LIBRARY_PATH=./linux64"
 ExecStartPre=$STEAM_INSTALL_SCRIPT
-ExecStart=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryServer.sh "-multihome=0.0.0.0"
+ExecStart=/home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer/FactoryServer.sh "-multihome=0.0.0.0"
 User=ubuntu
 Group=ubuntu
 StandardOutput=journal
 Restart=on-failure
 KillSignal=SIGINT
-WorkingDirectory=/home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer
+WorkingDirectory=/home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer
 
 [Install]
 WantedBy=multi-user.target
@@ -109,8 +109,8 @@ chmod 0600 /swap
 mkswap /swap
 swapon -a /swap
 
-su - ubuntu -c "mkdir -p /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
-su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/SteamApps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
+su - ubuntu -c "mkdir -p /home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
+su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/config /home/ubuntu/.steam/steam/steamapps/common/SatisfactoryDedicatedServer/FactoryGame/Saved/Config/LinuxServer"
 
 su - ubuntu -c "mkdir -p /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"
 su - ubuntu -c "aws s3 sync s3://$S3_SAVE_BUCKET/saves /home/ubuntu/.config/Epic/FactoryGame/Saved/SaveGames/server"

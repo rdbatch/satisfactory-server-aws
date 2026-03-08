@@ -8,7 +8,7 @@ import * as lambda_nodejs from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import { CfnEIP } from 'aws-cdk-lib/aws-ec2';
-import { Architecture } from 'aws-cdk-lib/aws-lambda';
+import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
 
 export class ServerHostingStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -69,10 +69,10 @@ export class ServerHostingStack extends Stack {
 
     const server = new ec2.Instance(this, `${prefix}Server`, {
       // 4 vCPU, 16 GB RAM since we're supporting late stage gameplay
-      instanceType: new ec2.InstanceType("m7a.xlarge"),
+      instanceType: new ec2.InstanceType("m8a.xlarge"),
       // get exact ami from parameter exported by canonical
       // https://discourse.ubuntu.com/t/finding-ubuntu-images-with-the-aws-ssm-parameter-store/15507
-      machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id"),
+      machineImage: ec2.MachineImage.fromSsmParameter("/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id"),
       // storage for steam, satisfactory and save files
       blockDevices: [
         {
@@ -152,6 +152,7 @@ export class ServerHostingStack extends Stack {
     if (Config.restartApi && Config.restartApi === true) {
       const startServerLambda = new lambda_nodejs.NodejsFunction(this, `${Config.prefix}StartServerLambda`, {
         architecture: Architecture.ARM_64,
+        runtime: Runtime.NODEJS_24_X,
         entry: './server-hosting/lambda/index.ts',
         description: "Restart game server",
         timeout: Duration.seconds(10),
